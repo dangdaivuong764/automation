@@ -50,19 +50,20 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 //import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFCell;
+import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFFormulaEvaluator;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.apache.xpath.compiler.Keywords;
 import org.junit.Assert;
+import org.mockito.internal.stubbing.answers.ThrowsException;
 import org.openqa.selenium.By;
 import org.openqa.selenium.Dimension;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.NoSuchElementException;
 /*import org.openqa.selenium.Keys;
- import org.openqa.selenium.NoSuchElementException;*/
+import org.openqa.selenium.NoSuchElementException;*/
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.TakesScreenshot;
 //import org.openqa.selenium.WebDriver;
@@ -71,24 +72,28 @@ import org.openqa.selenium.WebElement;
 
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.regex.Matcher;
 /*import java.util.jar.Attributes.Name;
- import java.util.logging.Level;*/
+import java.util.logging.Level;*/
 import java.util.regex.Pattern;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 //import org.json.JSONException;
 import org.json.JSONObject;
 /*import org.openqa.selenium.chrome.ChromeDriver;
- import org.openqa.selenium.chrome.ChromeOptions;
- import org.openqa.selenium.logging.LogEntries;
- import org.openqa.selenium.logging.LogEntry;
- import org.openqa.selenium.logging.LogType;
- import org.openqa.selenium.logging.LoggingPreferences;
- import org.openqa.selenium.remote.CapabilityType;
- import org.openqa.selenium.remote.DesiredCapabilities;
- import org.openqa.selenium.remote.RemoteWebDriver;*/
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.logging.LogEntries;
+import org.openqa.selenium.logging.LogEntry;
+import org.openqa.selenium.logging.LogType;
+import org.openqa.selenium.logging.LoggingPreferences;
+import org.openqa.selenium.remote.CapabilityType;
+import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.remote.RemoteWebDriver;*/
 import org.openqa.selenium.interactions.Action;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.internal.Locatable;
+import org.openqa.selenium.support.Color;
 
 import java.io.BufferedInputStream;
 import java.io.BufferedWriter;
@@ -97,23 +102,24 @@ import java.io.File;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 /*import java.net.URLEncoder;
- import java.nio.charset.Charset;
- import java.nio.charset.StandardCharsets;*/
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;*/
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.lang.enums.ValuedEnum;
 import org.apache.commons.lang3.StringEscapeUtils;
 import org.apache.commons.lang3.StringUtils;
 /*import org.apache.commons.lang3.StringEscapeUtils;
- import org.apache.commons.lang3.StringUtils;
- import org.apache.commons.lang3.time.StopWatch;*/
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.time.StopWatch;*/
 import org.apache.commons.text.CharacterPredicates;
 import org.apache.commons.text.RandomStringGenerator;
-import org.apache.commons.validator.routines.checkdigit.CUSIPCheckDigit;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.HttpClient;
@@ -140,9 +146,7 @@ import javax.imageio.ImageIO;
 import net.arnx.jsonic.JSON;
 
 import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.FluentWait;
 import org.openqa.selenium.support.ui.Select;
-import org.openqa.selenium.support.ui.Wait;
 import org.openqa.selenium.support.ui.WebDriverWait;
 
 //import codecLib.mpa.Constants;
@@ -150,6 +154,7 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 //import com.gargoylesoftware.htmlunit.javascript.host.Element;
 import com.jayway.restassured.RestAssured;
 import com.jayway.restassured.response.Response;
+import static com.jayway.restassured.RestAssured.*;
 
 import ru.yandex.qatools.ashot.AShot;
 import ru.yandex.qatools.ashot.Screenshot;
@@ -163,7 +168,6 @@ import support.testAPI.ReadAPI;
 import cucumber.api.DataTable;
 import cucumber.api.Scenario;
 import data.api.testing.JiraTicketsList;
-import static com.jayway.restassured.RestAssured.*;
 
 public class OperationHelper extends ParentStepsSupport {
 
@@ -626,8 +630,8 @@ public class OperationHelper extends ParentStepsSupport {
 			}
 		}
 		link = new ArrayList<>();
-		// driver.quit();
-		// driver = null;
+		driver.quit();
+		driver = null;
 	}
 
 	/**
@@ -640,23 +644,23 @@ public class OperationHelper extends ParentStepsSupport {
 	 */
 	public void openPage(String url, Scenario myScenario) throws IOException, AWTException, InterruptedException {
 		String link = ReadProperties.getElementsAndUrls(url);
-		Assert.assertTrue("The status is :'" + getResponse(link) + "' on URL:'" + link + "'", getResponse(link) == 200);
+		// Assert.assertTrue("The status is :'" + getResponse(link) + "' on URL:'" +
+		// link + "'", getResponse(link) == 200);
 		myScenario.write(link);
-		if (null != ReadProperties.getElementsAndUrls("auuser")) {
-			String part[] = link.split("://");
-			Assert.assertTrue(link + " wrong", part.length > 1);
-			link = part[0] + "://" + ReadProperties.getElementsAndUrls("auuser") + ":"
-					+ ReadProperties.getElementsAndUrls("aupass") + "@" + part[1];
-			driver.navigate().to(link);
-			Thread.sleep(3000);
-			link = ReadProperties.getElementsAndUrls(url);
-			driver.navigate().to(link);
-			driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
-			Assert.assertFalse("data:,".equals(driver.getTitle()));
-		} else {
-			Assert.assertFalse("Can't find url: '" + url + "' ", link == null);
-			driver.get(link);
-		}
+		/*
+		 * if (null != ReadProperties.getElementsAndUrls("auuser")) { String part[] =
+		 * link.split("://"); Assert.assertTrue(link + " wrong", part.length > 1); link
+		 * = part[0] + "://" + ReadProperties.getElementsAndUrls("auuser") + ":" +
+		 * ReadProperties.getElementsAndUrls("aupass") + "@" + part[1];
+		 * driver.navigate().to(link); Thread.sleep(3000); link =
+		 * ReadProperties.getElementsAndUrls(url); driver.navigate().to(link);
+		 * driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+		 * Assert.assertFalse("data:,".equals(driver.getTitle())); } else {
+		 * Assert.assertFalse("Can't find url: '" + url + "' ", link == null);
+		 * driver.get(link); }
+		 */
+		driver.navigate().to(link);
+		driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
 		waitForWebState();
 	}
 
@@ -885,8 +889,8 @@ public class OperationHelper extends ParentStepsSupport {
 		return number + 1;
 	}
 
-	public int getCellCount(String fielName) throws IOException, Exception {
-		FileInputStream fis = new FileInputStream(fielName);
+	public int getCellCount(String sheetName) throws IOException, Exception {
+		FileInputStream fis = new FileInputStream(sheetName);
 		XSSFWorkbook workbook = new XSSFWorkbook(fis);
 		Sheet sheet = workbook.getSheet("Sheet1");
 		int number = sheet.getRow(0).getPhysicalNumberOfCells();
@@ -1692,6 +1696,8 @@ public class OperationHelper extends ParentStepsSupport {
 		} catch (java.io.FileNotFoundException io) {
 			io.printStackTrace();
 		}
+		// ScreenShort full page on firefox so need cut of image fix only view
+		// current screen
 		if (ReadProperties.getConfigSelenium("run-browser").equals(Constant.BROWSER_FIREFOX)) {
 			int y = 0;
 			int yS = driver.manage().window().getSize().getHeight();
@@ -1835,7 +1841,9 @@ public class OperationHelper extends ParentStepsSupport {
 	}
 
 	private static String paramsAddDescriptionJira(String description) {
+		// Get dấu nháy vào json
 		String newVal = description.replaceAll("#", "\r\n #");
+
 		Map<String, Map> map = new HashMap<>();
 		Map<String, List<Map>> desc = new HashMap<>();
 		Map<String, String> map3 = new HashMap<>();
@@ -2094,6 +2102,55 @@ public class OperationHelper extends ParentStepsSupport {
 			String strColorAfter = eleColorAfter.getCssValue("background");
 			System.out.println("[color when mouse hover: " + strColorAfter + "]");
 			Assert.assertTrue(strColorAfter.contains(arrayStep[3].toString()));
+			break;
+
+		case "Should see the CSS as":
+			// WebElement eleCSS = driver.findElement(getIdentifier(arrayStep[2]));
+			// String strCSS = eleCSS.getCssValue(arrayStep[1]);
+			verifyCSS(arrayStep[1].toString(), arrayStep[2].toString(), arrayStep[3].toString());
+			break;
+		case "Should see the":
+			try {
+				returnElement(arrayStep[1].trim(), null);
+			} catch (AssertionError t) {
+				messageAlert = t.toString();
+			}
+
+			try {
+				if (arrayStep[3].trim().equals("displayed")) {
+					Assert.assertTrue(arrayStep[1] + " is not present. It is different with your expected!",
+							null != driver.findElement(getIdentifier(arrayStep[1])));
+				} else if (arrayStep[3].trim().equals("not displayed")) {
+					if ((driver.findElement(getIdentifier(arrayStep[1]))) != null) {
+						Assert.assertTrue(arrayStep[1] + " is present. It is different with your expected!",
+								!driver.findElement(getIdentifier(arrayStep[1])).isDisplayed());
+					}
+				}
+			} catch (AssertionError t) {
+				errorMessage = t.toString();
+				messageAlert = t.toString();
+			}
+			break;
+		case "Horizontal scroll to see the element":
+			WebElement Element = driver.findElement(getIdentifier(arrayStep[1]));
+			// This will scroll the page Horizontally till the element is found
+			je.executeScript("arguments[0].scrollIntoView();", Element);
+			Thread.sleep(1000);
+			break;
+		case "Scroll down the web page by":
+			je.executeScript("window.scrollBy(0," + arrayStep[1] + ")");
+			Thread.sleep(1000);
+			break;
+		case "Scroll down the web page by the visibility of the element":
+			WebElement visibilityElement = driver.findElement(getIdentifier(arrayStep[1]));
+			// This will scroll the page Horizontally till the element is found
+			je.executeScript("arguments[0].scrollIntoView();", visibilityElement);
+			Thread.sleep(1000);
+			break;
+		case "Scroll down the web page at the bottom of the page":
+			// This will scroll the web page till end.
+			je.executeScript("window.scrollTo(0, document.body.scrollHeight)");
+			Thread.sleep(1000);
 			break;
 		case "Drag and drop":
 			Actions actions = new Actions(driver);
@@ -3860,7 +3917,22 @@ public class OperationHelper extends ParentStepsSupport {
 					String strCell = cell.getStringCellValue();
 					if (StringUtils.isBlank(strCell))
 						continue;
+
+					// Current root folder
+					String rootFolder = System.getProperty("user.dir") + "//reporting//sourceHTML//";
+					File rootFile = new File(rootFolder);
+					if (!rootFile.exists()) {
+						rootFile.mkdirs();
+					}
+
 					String htmlFileName = FilenameUtils.getName(strCell);
+					String htmlFilePath = getFilePathFromURL(strCell);
+
+					if (StringUtils.isBlank(htmlFilePath)) {
+						System.out.println("Can't download html file : " + htmlFileName);
+						continue;
+					}
+
 					// get the url and run it
 					driver.get(strCell);
 
@@ -3885,14 +3957,20 @@ public class OperationHelper extends ParentStepsSupport {
 
 					String pageSource = driver.getPageSource();
 					// replace absolute to relative
-					pageSource = pageSource.replaceAll("=\"/", "=\"");
+					// pageSource = pageSource.replaceAll("=\"/", "=\"");
 
-					String filePath = System.getProperty("user.dir") + "//reporting//sourceHTML//" + htmlFileName;
-					File file = new File(filePath);
-					try {
-						file.createNewFile();
-						BufferedWriter BW = new BufferedWriter(
-								new OutputStreamWriter(new FileOutputStream(filePath), StandardCharsets.UTF_8));
+					// Save file html
+
+					File htmlRootFolder = new File(rootFile, htmlFilePath);
+					if (!htmlRootFolder.exists()) {
+						htmlRootFolder.mkdirs();
+					}
+					File fileHtml = new File(htmlRootFolder, htmlFileName);
+					if (!fileHtml.exists()) {
+						fileHtml.createNewFile();
+					}
+					try (BufferedWriter BW = new BufferedWriter(
+							new OutputStreamWriter(new FileOutputStream(fileHtml), StandardCharsets.UTF_8));) {
 						BW.write(pageSource);
 						BW.close();
 					} catch (IOException e) {
@@ -3901,7 +3979,7 @@ public class OperationHelper extends ParentStepsSupport {
 					}
 					// get images
 					List<WebElement> listImages = driver.findElements(By.tagName("img"));
-					String rootFolder = System.getProperty("user.dir") + "//reporting//sourceHTML//";
+
 					downloadResourceByWebElements(listImages, "src", rootFolder);
 					// get script
 					List<WebElement> listJs = driver.findElements(By.tagName("script"));
@@ -3916,67 +3994,17 @@ public class OperationHelper extends ParentStepsSupport {
 
 	}
 
-	public static void setValueInExcel1(int rowNum, int colNum, String value, String color) {
-		row = sheet.getRow(rowNum);
-		if (row == null) {
-			row = sheet.createRow(rowNum);
+	public String getFilePathFromURL(String url) {
+		String filePath = "";
+		// System.out.println("url : " + url);
+		String fileName = FilenameUtils.getName(url);
+		if (url.startsWith(baseHost) && url.length() > baseHost.length()) {
+			filePath = url.substring(baseHost.length(), url.length());
 		}
-
-		cell = row.getCell(colNum, org.apache.poi.ss.usermodel.Row.RETURN_BLANK_AS_NULL);
-		if (cell == null) {
-			cell = row.createCell(colNum);
-			cell.setCellValue(value);
-		} else {
-			cell.setCellValue(value);
-		}
-		CellStyle style = workbook.createCellStyle();
-		Font font = workbook.createFont();
-		style.setBorderBottom(CellStyle.BORDER_THIN);
-		style.setBottomBorderColor(HSSFColor.BLACK.index);
-		style.setBorderLeft(CellStyle.BORDER_THIN);
-		style.setLeftBorderColor(HSSFColor.BLACK.index);
-		style.setBorderRight(CellStyle.BORDER_THIN);
-		style.setRightBorderColor(HSSFColor.BLACK.index);
-		style.setBorderTop(CellStyle.BORDER_THIN);
-		style.setTopBorderColor(HSSFColor.BLACK.index);
-		style.setAlignment(HorizontalAlignment.LEFT);
-		style.setVerticalAlignment(org.apache.poi.ss.usermodel.VerticalAlignment.CENTER);
-		// Set color
-		switch (color) {
-		case "PASSED":
-			font.setColor(HSSFColor.WHITE.index);
-			style.setFillForegroundColor(HSSFColor.GREEN.index);
-			style.setFillPattern(HSSFCellStyle.SOLID_FOREGROUND);
-			style.setFont(font);
-			cell.setCellStyle(style);
-			break;
-		case "FAIL":
-			font.setColor(HSSFColor.WHITE.index);
-			style.setFillForegroundColor(HSSFColor.RED.index);
-			style.setFillPattern(HSSFCellStyle.SOLID_FOREGROUND);
-			style.setFont(font);
-			cell.setCellStyle(style);
-			break;
-		case "YELLOW":
-			font.setColor(HSSFColor.BLACK.index);
-			style.setFillForegroundColor(HSSFColor.YELLOW.index);
-			style.setFillPattern(HSSFCellStyle.SOLID_FOREGROUND);
-			style.setFont(font);
-			cell.setCellStyle(style);
-			break;
-		case "ORANGE":
-			font.setColor(HSSFColor.BLACK.index);
-			style.setFillForegroundColor(HSSFColor.ORANGE.index);
-			style.setFillPattern(HSSFCellStyle.SOLID_FOREGROUND);
-			style.setFont(font);
-			cell.setCellStyle(style);
-			break;
-		default:
-			font.setColor(HSSFColor.BLACK.index);
-			style.setFont(font);
-			cell.setCellStyle(style);
-			break;
-		}
+		// System.out.println("filepath : " + filePath);
+		if (filePath.endsWith(fileName))
+			filePath = filePath.substring(0, filePath.indexOf(fileName));
+		return filePath;
 	}
 
 	public void downloadResourceByWebElements(List<WebElement> elements, String attr, String rootFol) {
@@ -3988,56 +4016,200 @@ public class OperationHelper extends ParentStepsSupport {
 		}
 		for (WebElement item : elements) {
 			if (item != null && !StringUtils.isBlank(item.getAttribute(attr))) {
-				String imgUrl = item.getAttribute(attr);
+				String fileUrl = item.getAttribute(attr);
+				processFile(fileUrl, rootFile);
 
-				String imgPath = "";
-				String imgName = FilenameUtils.getName(imgUrl);
+			}
+		}
+	}
 
-				if (imgUrl.startsWith(baseHost) && imgUrl.length() > baseHost.length()) {
+	public void processFile(String fileUrl, File rootFile) {
+		System.out.println("Process :" + fileUrl);
 
-					imgPath = imgUrl.substring(baseHost.length(), imgUrl.length());
+		if (StringUtils.isBlank(fileUrl)) {
+			return;
+		}
+		String fileName = FilenameUtils.getName(fileUrl);
+		String filePath = getFilePathFromURL(fileUrl);
+		// System.out.println("fileUrl: "+fileUrl);
+		// System.out.println("fileName: "+fileName);
+		// System.out.println("filePath: "+filePath);
+		if (StringUtils.isBlank(filePath))
+			return;
+
+		File subPathFile = new File(rootFile, filePath);
+		if (!subPathFile.exists()) {
+			subPathFile.mkdirs();
+		}
+
+		// Image image = null;
+		byte[] fileContent = urlToBytes(fileUrl);
+		if (fileContent != null) {
+			try (FileOutputStream fos = new FileOutputStream(new File(subPathFile, fileName));) {
+				fos.write(fileContent);
+				fos.close();
+			} catch (Exception ex) {
+				System.out.println("Can't save file : " + ex.getMessage());
+			}
+		}
+
+		// Read file css / js
+		if (fileName.toLowerCase().endsWith(".css")) {
+			System.out.println("Process for : " + fileName);
+			String cssFileContent = new String(fileContent);
+			// String strPattern =
+			// "background(-image)?:url\\([\"']?(.*)[\"']?\\)";
+			// strPattern = "url\\([\"']?(.*)[\"']?\\)";
+			String strPattern = "[a-z\\-_0-9\\/\\:\\.]*\\.(jpg|jpeg|png|gif|css)";
+			Pattern pattern = Pattern.compile(strPattern);
+			Matcher matcher = pattern.matcher(cssFileContent);
+			List<String> imgLinks = new ArrayList<>();
+			while (matcher.find()) {
+				for (int i = 0; i < matcher.groupCount(); i++) {
+					String matchFile = matcher.group(i);
+					if (StringUtils.isBlank(matchFile))
+						continue;
+					// System.out.println("find : " + matchFile);
+					String matchFilePath = "";
+					if (matchFile.toLowerCase().endsWith("css")) {
+						if (matchFile.startsWith("/")) {
+							matchFile = baseHost + matchFile;
+						} else if (matchFile.startsWith("../")) {
+							matchFilePath = matchFile.substring("../".length(), matchFile.length());
+							matchFile = baseHost + filePath + matchFilePath;
+						}
+						System.out.println("Found " + matchFile);
+						processFile(matchFile, rootFile);
+					} else if (matchFile.toLowerCase().endsWith("jpg") || matchFile.toLowerCase().endsWith("png")
+							|| matchFile.toLowerCase().endsWith("jpeg") || matchFile.toLowerCase().endsWith("gif")) {
+						// matchFile = matchFile.substring("url(".length(),
+						// matchFile.length());
+						// matchFile = matchFile.substring(0,
+						// matchFile.indexOf(")"));
+						// System.out.println("pass : " + matchFile);
+						if (!imgLinks.contains(matchFile)) {
+							imgLinks.add(matchFile);
+						}
+					}
 				}
-				if (imgPath.endsWith(imgName))
-					imgPath = imgPath.substring(0, imgPath.indexOf(imgName));
-
-				if (StringUtils.isBlank(imgPath))
+			}
+			System.out.println("imagLinks: " + JSON.encode(imgLinks));
+			// Download files
+			String imgFileUrl = "";
+			String matchFilePath = "";
+			for (String imgLink : imgLinks) {
+				if (imgLink.toLowerCase().startsWith("/")) {
+					System.out.println("imgLink with /: " + baseHost + imgLink);
+					imgFileUrl = baseHost + imgLink;
+				} else if (imgLink.toLowerCase().startsWith("../")) {
+					matchFilePath = imgLink.substring("../".length(), imgLink.length());
+					System.out.println("imgLink with ../: " + filePath + matchFilePath);
+					imgFileUrl = baseHost + filePath + matchFilePath;
+				}
+				String imgFileName = FilenameUtils.getName(imgFileUrl);
+				String imgFilePath = getFilePathFromURL(imgFileUrl);
+				// System.out.println("fileUrl: " + imgFileUrl);
+				// System.out.println("fileName: " + imgFileName);
+				// System.out.println("filePath: " + imgFilePath);
+				if (StringUtils.isBlank(filePath))
 					continue;
 
-				File subPathFile = new File(rootFile, imgPath);
-				if (!subPathFile.exists()) {
-					subPathFile.mkdirs();
+				File subPathImgFile = new File(rootFile, imgFilePath);
+				if (!subPathImgFile.exists()) {
+					subPathImgFile.mkdirs();
 				}
 
 				// Image image = null;
-				try {
-					URL url = new URL(imgUrl);
-					InputStream in = new BufferedInputStream(url.openStream());
-					ByteArrayOutputStream out = new ByteArrayOutputStream();
-					byte[] buf = new byte[1024];
-					int n = 0;
-					while (-1 != (n = in.read(buf))) {
-						out.write(buf, 0, n);
+				byte[] imgFileContent = urlToBytes(imgFileUrl);
+				if (imgFileContent != null) {
+					try (FileOutputStream fos = new FileOutputStream(new File(subPathImgFile, imgFileName));) {
+						fos.write(imgFileContent);
+						fos.close();
+					} catch (Exception ex) {
+						System.out.println("Can't save file : " + ex.getMessage());
 					}
-					out.close();
-					in.close();
-					byte[] response = out.toByteArray();
-					// replace absolute to relative
-					// if(imgName.toLowerCase().endsWith(".js") ||
-					// imgName.toLowerCase().endsWith(".css")){
-					// String content = new String(response);
-					// content = content.replaceAll("url(/", "url(");
-					// content = content.replaceAll("url('/", "url('");
-					// content = content.replaceAll("url(\"/", "url(\"");
-					// response = content.getBytes();
-					// }
-					FileOutputStream fos = new FileOutputStream(new File(subPathFile, imgName));
-					fos.write(response);
-					fos.close();
-				} catch (Exception ex) {
-					System.out.println("eee : " + ex.getMessage());
+				}
+			}
+		} else if (fileName.toLowerCase().endsWith(".js")) {
+			String imgFileUrl = "";
+			String matchFilePath = "";
+			System.out.println("Process for : " + fileName);
+			String jsFileContent = new String(fileContent);
+			String strPattern = "[a-z\\-_0-9\\/\\:\\.]*\\.(jpg|jpeg|png|gif|pdf)";
+			Pattern pattern = Pattern.compile(strPattern);
+			Matcher matcher = pattern.matcher(jsFileContent);
+			List<String> imgLinks = new ArrayList<>();
+			while (matcher.find()) {
+				for (int i = 0; i < matcher.groupCount(); i++) {
+					String matchFile = matcher.group(i);
+					if (StringUtils.isBlank(matchFile))
+						continue;
+					System.out.println("find : " + matchFile);
+					imgLinks.add(matchFile);
+
+				}
+			}
+			System.out.println("imagLinks: " + JSON.encode(imgLinks));
+			for (String imgLink : imgLinks) {
+				if (imgLink.toLowerCase().startsWith("/")) {
+					System.out.println("imgLink with /: " + baseHost + imgLink);
+					imgFileUrl = baseHost + imgLink;
+				} else if (imgLink.toLowerCase().startsWith("../")) {
+					matchFilePath = imgLink.substring("../".length(), imgLink.length());
+					System.out.println("imgLink with ../: " + filePath + matchFilePath);
+					imgFileUrl = baseHost + filePath + matchFilePath;
+				}
+				String imgFileName = FilenameUtils.getName(imgFileUrl);
+				String imgFilePath = getFilePathFromURL(imgFileUrl);
+				// System.out.println("fileUrl: " + imgFileUrl);
+				// System.out.println("fileName: " + imgFileName);
+				// System.out.println("filePath: " + imgFilePath);
+				if (StringUtils.isBlank(filePath))
+					continue;
+
+				File subPathImgFile = new File(rootFile, imgFilePath);
+				if (!subPathImgFile.exists()) {
+					subPathImgFile.mkdirs();
+				}
+				// Image image = null;
+				byte[] imgFileContent = urlToBytes(imgFileUrl);
+				if (imgFileContent != null) {
+					try (FileOutputStream fos = new FileOutputStream(new File(subPathImgFile, imgFileName));) {
+						fos.write(imgFileContent);
+						fos.close();
+					} catch (Exception ex) {
+						System.out.println("Can't save file : " + ex.getMessage());
+					}
 				}
 			}
 		}
+	}
+
+	public String urlToString(String url) {
+		byte[] strContent = urlToBytes(url);
+		if (strContent == null)
+			return StringUtils.EMPTY;
+		return new String(strContent);
+	}
+
+	public byte[] urlToBytes(String url) {
+		byte[] result = null;
+		try {
+			URL uri = new URL(url);
+			InputStream in = new BufferedInputStream(uri.openStream());
+			ByteArrayOutputStream out = new ByteArrayOutputStream();
+			byte[] buf = new byte[1024];
+			int n = 0;
+			while (-1 != (n = in.read(buf))) {
+				out.write(buf, 0, n);
+			}
+			out.close();
+			in.close();
+			result = out.toByteArray();
+		} catch (Exception ex) {
+			System.out.println("eee : " + ex.getMessage());
+		}
+		return result;
 	}
 
 	private boolean existsElement(String xpath) {
@@ -4134,25 +4306,433 @@ public class OperationHelper extends ParentStepsSupport {
 		}
 	}
 
-	// CheckUsercaseOnExcel
-	public void CheckUsercaseOnExcel(String fileName, String sheetName, DataTable data2) throws Exception {
+	public void openAuthPage(String testURL, DataTable table, Scenario myScenario2) throws InterruptedException {
+		// TODO Auto-generated method stub
+		String link = ReadProperties.getElementsAndUrls(testURL);
 
-		List<List<String>> list = data2.raw();
-		String s = list.get(0).get(0);
-		System.out.println(s);
-		System.out.println("CheckUsercaseOnExcel - Copy" + " " + s);
+		if (null != ReadProperties.getElementsAndUrls("auuser")) {
+			String part[] = link.split("://");
+			Assert.assertTrue(link + " wrong", part.length > 1);
+			link = part[0] + "://" + ReadProperties.getElementsAndUrls("auuser") + ":"
+					+ ReadProperties.getElementsAndUrls("aupass") + "@" + part[1];
+			driver.navigate().to(link);
+			Thread.sleep(3000);
+			link = ReadProperties.getElementsAndUrls(testURL);
+			driver.navigate().to(link);
+			driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+			// Assert.assertFalse("data:,".equals(driver.getTitle()));
+		} else {
+			Assert.assertFalse("Can't find url: '" + testURL + "' ", link == null);
+			driver.get(link);
+		}
+		// Login to this site
+		List<List<String>> data = table.raw();
+		System.out.println("email:" + data.get(0).get(0));
+		System.out.println("email:" + data.get(0).get(1));
+		// click on link
+		WebElement lnkLogin = driver.findElement(By.xpath("//*[@id='app']/div/div[1]/div[2]/div/div[3]/a[1]"));
+		lnkLogin.click();
+		// email
+		WebElement inputEmail = driver.findElement(By.id("email"));
+		inputEmail.clear();
+		inputEmail.sendKeys(data.get(0).get(0));
+		// password
+		WebElement inputPassword = driver.findElement(By.id("password"));
+		inputPassword.clear();
+		inputPassword.sendKeys(data.get(0).get(1));
+		// submit
+		WebElement tbnSubmit = driver
+				.findElement(By.xpath("//*[@id='app']/div/div[1]/div/main/div/div[2]/div[2]/div[2]/div/form/button"));
+		tbnSubmit.click();
+		waitForWebState();
+	}
+
+	public static List<String> getCssAttrFromFile(String filePath) {
+		try {
+			return FileUtils.readLines(new File(filePath), Charset.forName("UTF-8"));
+		} catch (IOException e) {
+			System.out.println("Error " + e.getMessage());
+		}
+		return new ArrayList<>();
+	}
+
+	public void verifyCSS(String attrib, String Object, String value) throws Exception {
+		WebElement eleCss = driver.findElement(getIdentifier(Object));
+		String actualResult = eleCss.getCssValue(attrib);
+		// define CSS with color
+		// define CSS with font-weight
+		// define other
+		if (attrib.contains("color")) {
+			actualResult = Color.fromString(actualResult).asHex();
+			Assert.assertEquals(attrib + "=>", value.toLowerCase(), actualResult.toLowerCase());
+		} else if (attrib.contains("font-weight")) {
+			switch (actualResult) {
+			case "900":
+				Assert.assertEquals(attrib + "=>", value.toLowerCase(), "ultra bold");
+				break;
+			case "800":
+				Assert.assertEquals(attrib + "=>", value.toLowerCase(), "extra bold");
+				break;
+			case "700":
+				Assert.assertEquals(attrib + "=>", value.toLowerCase(), "bold");
+				break;
+			case "600":
+				Assert.assertEquals(attrib + "=>", value.toLowerCase(), "semi bold");
+				break;
+			case "500":
+				Assert.assertEquals(attrib + "=>", value.toLowerCase(), "medium");
+				break;
+			case "400":
+				Assert.assertEquals(attrib + "=>", value.toLowerCase(), "normal");
+				break;
+			case "300":
+				Assert.assertEquals(attrib + "=>", value.toLowerCase(), "light");
+				break;
+			case "200":
+				Assert.assertEquals(attrib + "=>", value.toLowerCase(), "extra light");
+				break;
+			case "100":
+				Assert.assertEquals(attrib + "=>", value.toLowerCase(), "thin");
+				break;
+			default:
+				Assert.assertEquals(attrib + "=>", value.toLowerCase(), actualResult.toLowerCase());
+			}
+		} else {
+			Assert.assertEquals(attrib + "=>", value.toLowerCase(), actualResult.toLowerCase());
+		}
+	}
+	/*
+	 * public static void main(String[] args) {
+	 * System.out.println(JSON.encode(getCssAttrFromFile(
+	 * "C:\\Users\\nhan.nguyen\\workspace\\auto_fw_jira\\src\\test\\resources\\properties\\attrib.txt"
+	 * ))); String strTemp = getCssAttrFromFile(
+	 * "C:\\Users\\nhan.nguyen\\workspace\\auto_fw_jira\\src\\test\\resources\\properties\\attrib.txt"
+	 * ).get(0).toString(); System.out.println(strTemp); }
+	 */
+
+	public void checkAPIDisplay(String excel, String sheetName) throws Exception {
+		DataProvider data = new DataProvider();
+		String path = data.getExcelfile(excel);
+		FileInputStream file = new FileInputStream(path);
+		@SuppressWarnings("resource")
+		XSSFWorkbook workbook = new XSSFWorkbook(file);
+		XSSFSheet sheet = workbook.getSheet(sheetName);
+		int rowCount = sheet.getPhysicalNumberOfRows();
+		int colCount = sheet.getRow(0).getPhysicalNumberOfCells();
+		int noIndex = 0, apiNameIndex = 0, urlIndex = 0, methodIndex = 0, headerIndex = 0, bodyIndex = 0,
+				pageUrlIndex = 0, elementIndex = 0, apiStructureIndex = 0, typeIndex = 0, resutlIndex = 0,
+				valueAPIIndex = 0;
+		for (int i = 0; i < colCount; i++) {
+			String title = sheet.getRow(0).getCell(i).toString();
+			if (title.equals("No.")) {
+				noIndex = i;
+			} else if (title.equals("API Name")) {
+				apiNameIndex = i;
+			} else if (title.equals("API Url")) {
+				urlIndex = i;
+			} else if (title.equals("Method")) {
+				methodIndex = i;
+			} else if (title.equals("Header")) {
+				headerIndex = i;
+			} else if (title.equals("Body")) {
+				bodyIndex = i;
+			} else if (title.equals("Page Verify")) {
+				pageUrlIndex = i;
+			} else if (title.equals("Element")) {
+				elementIndex = i;
+			} else if (title.equals("API Structure")) {
+				apiStructureIndex = i;
+			} else if (title.equals("Type")) {
+				typeIndex = i;
+			} else if (title.equals("Result")) {
+				resutlIndex = i;
+			} else if (title.equals("Value Fail on API")) {
+				valueAPIIndex = i;
+			}
+
+		}
+		String apiURL = "", method = "", header = "", body = "", pageUrl = "", element = "";
+		Map<String, String> hmHeader = new HashMap<String, String>();
+		System.err.println(rowCount);
+		outerloop: for (int i = 1; i < rowCount; i++) {
+			try {
+				apiURL = sheet.getRow(i).getCell(urlIndex).toString();
+			} catch (NullPointerException e) {
+
+			}
+			try {
+				method = sheet.getRow(i).getCell(methodIndex).toString();
+			} catch (NullPointerException e) {
+
+			}
+			try {
+				header = sheet.getRow(i).getCell(headerIndex).toString();
+				if (header.contains(System.getProperty("line.separator"))) {
+					String[] arr = header.split(":");
+					hmHeader.put(arr[0], arr[1]);
+				} else {
+					String[] arrParent = header.split(System.getProperty("line.separator"));
+					for (String chil : arrParent) {
+						String[] arrChil = chil.split(":");
+						hmHeader.put(arrChil[0], arrChil[1]);
+					}
+				}
+			} catch (NullPointerException e) {
+
+			}
+			try {
+				body = sheet.getRow(i).getCell(bodyIndex).toString();
+			} catch (NullPointerException e) {
+
+			}
+			try {
+				pageUrl = sheet.getRow(i).getCell(pageUrlIndex).toString();
+			} catch (NullPointerException e) {
+
+			}
+			try {
+				element = sheet.getRow(i).getCell(elementIndex).toString();
+			} catch (NullPointerException e) {
+				System.err.println("====== End Test =======");
+				break outerloop;
+
+			}
+
+			String apiStructure = sheet.getRow(i).getCell(apiStructureIndex).toString();
+			String type = sheet.getRow(i).getCell(typeIndex).toString();
+
+			Response resp = null;
+			driver.navigate().to(pageUrl);
+			if (method.equalsIgnoreCase("GET")) {
+				resp = given().headers(hmHeader).when().get(apiURL);
+			}
+			Thread.sleep(5000);
+
+			String responString = resp.asString();
+			String apiValue = "";
+			if (type.equalsIgnoreCase("ENUM")) {
+				apiValue = getValueAPI(apiStructure, responString, type);
+				switch (apiValue) {
+				case "1":
+					apiValue = "Used";
+					break;
+				case "0":
+					apiValue = "New";
+					break;
+				default:
+					break;
+
+				}
+			} else {
+				apiValue = getValueAPI(apiStructure, responString, type);
+			}
+
+			String elementValue = driver.findElement(By.xpath(element)).getText();
+			String status = "";
+			if (apiValue.equals(elementValue)) {
+				status = "PASSED";
+			} else {
+				status = "FAILED";
+			}
+
+			XSSFCell cell;
+			// Write Status
+			cell = (XSSFCell) sheet.getRow(i).createCell(resutlIndex);
+			cell.setCellValue(status);
+			setColorCell(status, workbook, cell);
+			cell = (XSSFCell) sheet.getRow(i).createCell(valueAPIIndex);
+			cell.setCellValue(apiValue);
+			FileOutputStream fileOut = new FileOutputStream(path);
+			workbook.write(fileOut);
+			fileOut.flush();
+			fileOut.close();
+
+		}
+	}
+
+	/**
+	 * Split API Structure on Excel file and get value
+	 * 
+	 * @param apiStructure
+	 * @param responString
+	 * @return
+	 */
+	private String getValueAPI(String apiStructure, String responString, String type) {
+		JSONObject root = new JSONObject(responString);
+		String value = "";
+		String[] arr = apiStructure.split("\\.");
+		JSONObject sumObject = null;
+		JSONArray arrObject = null;
+
+		// start to loop API data base on Excel API Structure
+		for (int i = 0; i < arr.length; i++) {
+			if (i == 0) {
+				sumObject = root.getJSONObject(arr[0]);
+			} else if (i > 0 && i < arr.length - 1) {
+				if (!arr[i].contains("-")) {
+					sumObject = sumObject.getJSONObject(arr[i]);
+				} else {
+					String[] arrAPIStructure = arr[i].split("\\-");
+					arrObject = sumObject.optJSONArray(arrAPIStructure[0]);
+					// sumObject = arrObject.getJSONObject(0);
+					for (int index = 0, total = arrObject.length(); index < total; index++) {
+						final JSONObject jsonObject = arrObject.getJSONObject(index);
+						String[] arrKeyValue = arrAPIStructure[1].split("\\=");
+						if (jsonObject.getString(arrKeyValue[0]).equals(arrKeyValue[1])) {
+							sumObject = jsonObject;
+							break;
+						}
+
+					}
+				}
+			} else if (i == arr.length - 1) {
+				// Get last value of API Structure
+				String valueEnd = "";
+				String test = arr[i];
+
+				if (test.contains("-AOO")) { // this condition is used to return an object or array
+					test = test.replaceAll("-AOO", "");
+					// Check real API is ARR or Object to get data
+
+					String isAOO = isArrOrObject(sumObject, test);
+					if (isAOO.equals("Array")) {
+						arrObject = sumObject.optJSONArray(test);
+						sumObject = arrObject.getJSONObject(0);
+
+					} else {
+						sumObject = sumObject.getJSONObject(test);
+					}
+
+					valueEnd = sumObject.toString();
+					valueEnd = valueEnd.replaceAll("\\{", "").replaceAll("\\}", "").replaceAll("\"", "");
+					value = valueEnd;
+				} else { // This condition is used to check and return an value
+					// valueEnd = sumObject.toString();
+					// valueEnd = valueEnd.replaceAll("\\{", "").replaceAll("\\}",
+					// "").replaceAll("\"", "");
+					// String[] arrEnd = valueEnd.split("\\,");
+					// // Check the last API Structure is exits in real API or not
+					// for (String s : arrEnd) {
+					// if (s.contains(arr[i])) {
+					// value = s.substring(s.lastIndexOf(":") + 1, s.length()).replaceAll("\"",
+					// "").replaceAll("}",
+					// "");
+					// System.err.println(value);
+					// break;
+					// }
+					// }
+					if (type.equalsIgnoreCase("String")) {
+						value = sumObject.getString(arr[i]);
+					} else if (type.equalsIgnoreCase("Boolean")) {
+						value = sumObject.getBoolean(arr[i]) + "";
+					} else if (type.equalsIgnoreCase("Double")) {
+						value = sumObject.getDouble(arr[i]) + "";
+					} else if (type.equalsIgnoreCase("Int") || type.equalsIgnoreCase("ENUM")) {
+						value = sumObject.getInt(arr[i]) + "";
+					}
+
+				}
+
+			}
+
+		}
+		System.err.println(value);
+		return value;
+	}
+
+	/**
+	 * Function check is ARR or Object
+	 * 
+	 * @param object
+	 * @param key
+	 * @return
+	 */
+
+	private String isArrOrObject(JSONObject object, String key) {
+		String isAOO = "";
+		String value = object.toString();
+		int sub = value.indexOf(key);
+		value = value.substring(sub, key.length() + sub + 3);
+		if (value.contains("{")) {
+			isAOO = "Object";
+		} else {
+			isAOO = "Array";
+		}
+		return isAOO;
+	}
+
+	/**
+	 * Set cell color
+	 * 
+	 * @param status
+	 * @param workbook
+	 * @param cell
+	 */
+	@SuppressWarnings("deprecation")
+	public void setColorCell(String status, XSSFWorkbook workbook, XSSFCell cell) {
+		CellStyle style = workbook.createCellStyle();
+		XSSFFont font = workbook.createFont();
+		style.setBorderBottom(CellStyle.BORDER_THIN);
+		style.setBottomBorderColor(HSSFColor.BLACK.index);
+		style.setBorderLeft(CellStyle.BORDER_THIN);
+		style.setLeftBorderColor(HSSFColor.BLACK.index);
+		style.setBorderRight(CellStyle.BORDER_THIN);
+		style.setRightBorderColor(HSSFColor.BLACK.index);
+		style.setBorderTop(CellStyle.BORDER_THIN);
+		style.setTopBorderColor(HSSFColor.BLACK.index);
+		style.setAlignment(HorizontalAlignment.CENTER);
+		style.setVerticalAlignment(org.apache.poi.ss.usermodel.VerticalAlignment.CENTER);
+		switch (status) {
+		case "PASSED":
+			font.setColor(HSSFColor.WHITE.index);
+			style.setFillForegroundColor(HSSFColor.GREEN.index);
+			style.setFillPattern(HSSFCellStyle.SOLID_FOREGROUND);
+			style.setFont(font);
+			cell.setCellStyle(style);
+			break;
+		case "FAILED":
+			font.setColor(HSSFColor.WHITE.index);
+			style.setFillForegroundColor(HSSFColor.RED.index);
+			style.setFillPattern(HSSFCellStyle.SOLID_FOREGROUND);
+			style.setFont(font);
+			cell.setCellStyle(style);
+			break;
+		case "PENDING":
+			font.setColor(HSSFColor.WHITE.index);
+			style.setFillForegroundColor(HSSFColor.GREY_25_PERCENT.index);
+			style.setFillPattern(HSSFCellStyle.SOLID_FOREGROUND);
+			style.setFont(font);
+			cell.setCellStyle(style);
+			break;
+		default:
+			font.setColor(HSSFColor.BLACK.index);
+			style.setFont(font);
+			cell.setCellStyle(style);
+			break;
+		}
+	}
+
+	/**
+	 * Check task using Test case on Excel file
+	 * 
+	 * @param fileName
+	 * @param sheetName
+	 * @param data
+	 * @throws Exception
+	 */
+
+	public void CheckUsercaseOnExcel(String fileName, String sheetName, DataTable data) throws Exception {
+		List<List<String>> list = data.raw();
+		String rowDo = list.get(0).get(0).trim();
+		DataProvider dataPro = new DataProvider();
 		// Read file excel
-
-		String strFileName = System.getProperty("user.dir") + File.separator + "src" + File.separator + "test"
-				+ File.separator + "resources" + File.separator + "excel_data-input" + File.separator + fileName;
-		fis = new FileInputStream(strFileName);
-		workbook = new XSSFWorkbook(fis);
-		sheet = workbook.getSheet(sheetName);
-		int desInex = 0;
-		int expetedInex = 0;
-		int resultInex1 = 0;
-		int resultInex2 = 0;
+		String strFileName = dataPro.getExcelfile(fileName);
+		FileInputStream file = new FileInputStream(strFileName);
+		XSSFWorkbook workbook = new XSSFWorkbook(file);
+		XSSFSheet sheet = workbook.getSheet(sheetName);
+		int desInex = 0, expetedInex = 0, resultInex = 0;
 		int columnCount = this.getCellCount(strFileName);
+		// Get column index of Excel file to read data and write test result
 		for (int col = 0; col < columnCount; col++) {
 			String titleColumnText = sheet.getRow(0).getCell(col).toString().trim();
 			if (titleColumnText.equalsIgnoreCase("Description")) {
@@ -4161,977 +4741,259 @@ public class OperationHelper extends ParentStepsSupport {
 			if (titleColumnText.equalsIgnoreCase("Expected Result")) {
 				expetedInex = col;
 			}
-			if (titleColumnText.equalsIgnoreCase("Result 1")) {
-				resultInex1 = col;
-			}
-			if (titleColumnText.equalsIgnoreCase("Result 2")) {
-				resultInex2 = col;
+			if (titleColumnText.equalsIgnoreCase("Result of Automation Test")) {
+				resultInex = col;
 			}
 		}
 
-		// 2. Click on: "Edit" button
-		if (s.contains("All")) {
+		if (rowDo.equals("All")) { // Case 1: Run all row on Excel file
 			int rowCount = sheet.getLastRowNum();
-			for (int i = 1; i < rowCount + 1; i++) {
-				String step = sheet.getRow(i).getCell(desInex).getStringCellValue();
-				// System.out.println(b);
-				System.out.println(step);
-				String[] arrStep = step.split("\n");
-				String error = "";
-				String verifyCode = "";
-				boolean breakResult = false;
-				String[] token = null;
-				for (String x : arrStep) {
-					String[] keyWordStep = x.split(":");
-					String keyWord1 = keyWordStep[0]
-							.substring(keyWordStep[0].lastIndexOf(".") + 1, keyWordStep[0].length()).trim();
-
-					System.out.println("keyWord" + ":  " + keyWord1);
-					if (error.length() > 0) {
-						XSSFCell bien = sheet.getRow(i).createCell(resultInex1);
-						bien.setCellValue(error);
-						fos = new FileOutputStream(strFileName);
-						workbook.write(fos);
-						fos.flush();
-						fos.close();
-						error = "";
-						breakResult = true;
-						break;
-					} else {
-						switch (keyWord1) {
-
-						case "Go to URL":
-							token = keyWordStep[1].split("\"");
-							String url = keyWordStep[1] + ":" + keyWordStep[2];
-							String url1 = url.replaceAll("\"", "");
-							String url2 = url1.replaceAll("with value", "");
-							try {
-								driver.get(url2);
-								Thread.sleep(2000);
-							} catch (Exception e) {
-								error = "Pending: wrong" + url2;
-							}
-							break;
-						case "Navigate to URL":
-							token = keyWordStep[1].split("\"");
-							String urls = keyWordStep[1] + ":" + keyWordStep[2];
-							String urls1 = urls.replaceAll("\"", "");
-							String urls2 = urls1.replaceAll("with value", "");
-							try {
-								driver.navigate().to(urls2);
-								Thread.sleep(2000);
-							} catch (Exception e) {
-								error = "Pending: wrong" + urls2;
-							}
-							break;
-						case "Click on":
-							String[] arr = keyWordStep[1].split("\"");
-							String elementKey = arr[1];
-							System.out.println("Key la " + elementKey);
-							try {
-								driver.findElement(getIdentifier(elementKey)).click();
-							} catch (Exception e) {
-								error = "Pending: wrong" + elementKey + "element";
-							}
-							Thread.sleep(1000);
-							break;
-						case "Scroll down":
-							JavascriptExecutor js = (JavascriptExecutor) driver;
-							js.executeScript("window.scrollTo(0, document.body.scrollHeight)");
-							break;
-						case "Input into name":
-							String[] arrlogin = keyWordStep[1].split("\"");
-							if (arrlogin[1].equalsIgnoreCase("Verification Code fields")) {
-								WebElement input = driver.findElement(By.xpath(".//div[@class='form-text']/div/input"));
-								input.click();
-								for (char ch : arrlogin[3].toCharArray()) {
-									String codeInput = Character.toString(ch);
-									Actions act = new Actions(driver);
-									act.sendKeys(codeInput).build().perform();
-									Thread.sleep(2000);
-								}
-							} else {
-								String elementPlace = arrlogin[1];
-								try {
-									driver.findElement(getIdentifier(elementPlace)).click();
-									String elementInput = arrlogin[3];
-									if (elementInput.equals("blank")) {
-										driver.findElement(getIdentifier(elementPlace)).clear();
-										driver.findElement(getIdentifier(elementPlace)).sendKeys("");
-									} else {
-										driver.findElement(getIdentifier(elementPlace)).clear();
-										driver.findElement(getIdentifier(elementPlace))
-												.sendKeys(getRandomString(3, 5) + arrlogin[3]);
-
-									}
-								} catch (Exception e) {
-									error = "Pending: wrong" + elementPlace + "element";
-								}
-							}
-							break;
-						case "Input into":
-							String[] arr1 = keyWordStep[1].split("\"");
-							if (arr1[1].equalsIgnoreCase("Verification Code fields")) {
-								WebElement input = driver.findElement(By.xpath(".//div[@class='form-text']/div/input"));
-								input.click();
-								for (char ch : arr1[3].toCharArray()) {
-									String codeInput = Character.toString(ch);
-									Actions act = new Actions(driver);
-									act.sendKeys(codeInput).build().perform();
-									Thread.sleep(2000);
-								}
-							} else {
-								String elementPlace = arr1[1];
-								try {
-									driver.findElement(getIdentifier(elementPlace)).click();
-									String elementInput = arr1[3];
-									if (elementInput.equals("blank")) {
-										driver.findElement(getIdentifier(elementPlace)).clear();
-										driver.findElement(getIdentifier(elementPlace)).sendKeys("");
-									} else {
-										driver.findElement(getIdentifier(elementPlace)).clear();
-										driver.findElement(getIdentifier(elementPlace)).sendKeys(arr1[3]);
-
-									}
-								} catch (Exception e) {
-									error = "Pending: wrong" + elementPlace + "element";
-								}
-							}
-							break;
-						case "Upload image":
-							String[] arrImage = keyWordStep[1].split("\"");
-							String elementPlace = arrImage[1];
-							try {
-								driver.findElement(getIdentifier(elementPlace)).click();
-								String elementInput = arrImage[3];
-								uploadImage(elementInput);
-							} catch (Exception e) {
-								error = "Pending: wrong" + elementPlace + "element";
-							}
-							break;
-						case "Wait":
-							String[] arr2 = keyWordStep[1].split("\"");
-							String elementTime = arr2[1] + "000";
-							int result = Integer.parseInt(elementTime);
-							try {
-								Thread.sleep(result);
-							} catch (Exception e) {
-								error = "Pending: wrong" + result + "element";
-							}
-							break;
-
-						case "Get response code":
-							String[] arr3 = keyWordStep[1].split("\"");
-							try {
-								String urlAPI = "https://a0cw2kn9cc.execute-api.ap-southeast-1.amazonaws.com/dev/postpaid/v1/account/verification-code";
-								String body = "{\"msisdn\":\"" + arr3[1] + "\"}";
-								System.err.println(body);
-								Response resp = given().header("g1es_token", "myacc-qcauto11@gmail.com").body(body)
-										.when().post(urlAPI);
-								Thread.sleep(5000);
-								String responString = resp.asString();
-								System.out.println(responString);
-								String code = responString.replaceAll(" ", "").replaceAll("\\{", "")
-										.replaceAll("\\}", "").replaceAll("\"", "");
-								verifyCode = code.substring(code.lastIndexOf(":") + 1, code.length());
-								System.out.println(verifyCode);
-							} catch (Exception e) {
-								error = "Pending: issue with response";
-							}
-							break;
-						case "Run API":
-							String[] arr4 = keyWordStep[1].split("\"");
-							try {
-								WebElement input = driver.findElement(By.xpath(".//div[@class='form-text']/div/input"));
-								input.click();
-								for (char ch : verifyCode.toCharArray()) {
-									String codeInput = Character.toString(ch);
-									Actions act = new Actions(driver);
-									act.sendKeys(codeInput).build().perform();
-									Thread.sleep(500);
-								}
-							} catch (Exception e) {
-								error = "Pending: wrong input element";
-							}
-
-							break;
-
-						// case "Select value":
-						// String[] arr5 = keyWordStep[1].split("\"");
-						// String elementvalue = arr5[1];
-						// try {
-						// driver.findElement(getIdentifier(elementvalue)).click();
-						// } catch (Exception e) {
-						// error = "Pending: wrong" + elementvalue + "element";
-						// }
-						// break;
-						case "Wait for":
-							driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
-							String[] arr6 = keyWordStep[1].split("\"");
-							waitForWebState();
-							System.out.println(arr6[1]);
-							try {
-								List<WebElement> a = driver.findElements(getIdentifier(arr6[1]));
-
-							} catch (Exception e) {
-								sheet.getRow(i).getCell(resultInex1)
-										.setCellValue("Pending: wrong" + arr6[1] + "element");
-							}
-							break;
-						case "Set checkbox":
-							String[] arr7 = keyWordStep[1].split("\"");
-							String elementcb = arr7[1];
-							try {
-								driver.findElement(getIdentifier(elementcb)).click();
-							} catch (Exception e) {
-								error = "Pending: wrong" + elementcb + "element";
-
-							}
-							break;
-						case "Set uncheckbox":
-							String[] arr8 = keyWordStep[1].split("\"");
-							String elementUncheck = arr8[1];
-							try {
-								driver.findElement(getIdentifier(elementUncheck)).click();
-							} catch (Exception e) {
-								error = "Pending: wrong" + elementUncheck + "element";
-
-							}
-							break;
-						case "Select value":
-							String[] arr9 = keyWordStep[1].split("\"");
-							String elementDropdown = arr9[1];
-							try {
-								WebElement dropDown = driver.findElement(getIdentifier(elementDropdown));
-								Select select = new Select(dropDown);
-								String slecTextVisible = arr9[3];
-								select.selectByVisibleText(slecTextVisible);
-							} catch (Exception e) {
-								error = "Pending: wrong" + elementDropdown + "element";
-							}
-							break;
-
-						default:
-							System.out.println("Done");
-
-						}
-					}
-				}
-				if (!breakResult) {
-					String result = sheet.getRow(i).getCell(expetedInex).getStringCellValue();
-					System.out.println("The result " + result);
-					String[] arrResult = result.split("\n");
-					for (String y : arrResult) {
-						String[] keyWordResult = y.split(":");
-
-						String keyWord2 = keyWordResult[0]
-								.substring(keyWordResult[0].lastIndexOf(".") + 1, keyWordResult[0].length()).trim();
-						System.out.println("keyWord" + ":" + keyWord2);
-						switch (keyWord2) {
-
-						case "Navigate to":
-							driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
-							String[] arr = keyWordResult[1].split("\"");
-							String expectedURL = arr[1];
-
-							// String expectedURL =
-							// ReadProperties.getElementsAndUrls(elementKey);
-							waitForWebState();
-							String actualUrl = driver.getTitle();
-							System.out.println(expectedURL);
-							System.out.println(actualUrl);
-							System.out.println("cột  " + resultInex1);
-							System.out.println("dòng  " + i);
-							XSSFCell dataSet = null;
-							if (expectedURL.contains(actualUrl)) {
-								dataSet = sheet.getRow(i).createCell(resultInex1);
-								dataSet.setCellValue("passed");
-								System.out.println("pass");
-							} else {
-								dataSet = sheet.getRow(i).createCell(resultInex1);
-								dataSet.setCellValue("failed");
-								System.out.println("failed");
-
-							}
-							break;
-
-						case "Should see text":
-							driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
-							String[] arr1 = keyWordResult[1].split("\"");
-							waitForWebState();
-							String elementKey1 = arr1[3];
-							String text = arr1[1];
-							try {
-								String text1 = driver.findElement(getIdentifier(elementKey1)).getText();
-								System.out.println(text);
-								System.out.println(text1);
-								if (text1.contains(text)) {
-									sheet.getRow(i).getCell(resultInex1).setCellValue("passed");
-									System.out.println("pass");
-								} else {
-									sheet.getRow(i).getCell(resultInex1).setCellValue("failed");
-									System.out.println("failed");
-								}
-							} catch (Exception e) {
-								sheet.getRow(i).getCell(resultInex1).setCellValue("pending");
-							}
-
-							break;
-						case "Should see result":
-							driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
-							String[] arr2 = keyWordResult[1].split("\"");
-							waitForWebState();
-							System.out.println(arr2[1]);
-							try {
-								List<WebElement> e = driver.findElements(getIdentifier(arr2[1]));
-								if (e.size() > 0) {
-									sheet.getRow(i).getCell(resultInex1).setCellValue("passed");
-									System.out.println("pased");
-								} else {
-									sheet.getRow(i).getCell(resultInex1).setCellValue("failed");
-									System.out.println("failed");
-								}
-							} catch (Exception e) {
-								sheet.getRow(i).getCell(resultInex1).setCellValue("pending");
-							}
-							break;
-
-						case "Disabled":
-							driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
-							String[] arr3 = keyWordResult[1].split("\"");
-							waitForWebState();
-							System.out.println(arr3[1]);
-							try {
-								List<WebElement> b = driver.findElements(getIdentifier(arr3[1]));
-								if (b.size() == 0) {
-									sheet.getRow(i).getCell(resultInex1).setCellValue("passed");
-									System.out.println("pased");
-								} else {
-									sheet.getRow(i).getCell(resultInex1).setCellValue("failed");
-									System.out.println("failed");
-								}
-							} catch (Exception e) {
-								sheet.getRow(i).getCell(resultInex1).setCellValue("peding");
-							}
-							break;
-
-						default:
-							System.out.println("Done");
-						}
-
-					}
-					fos = new FileOutputStream(strFileName);
-
-					System.out.println(fos);
-					workbook.write(fos);
-					fos.flush();
-					fos.close();
-				} else {
-					breakResult = false;
-				}
-
+			for (int i = 1; i < rowCount; i++) {
+				stepByStep(strFileName, workbook, sheet, i, desInex, expetedInex, resultInex);
 			}
 		} else {
-			if (s.contains(",")) {
-				// String results = s.replaceAll("[-+.^:,]","");
-				String[] dd = s.split(",");
-				for (int j = 0; j < dd.length; j++) {
-					int parseIn = Integer.parseInt(dd[j].trim());
-					System.out.println(parseIn);
-					String step = sheet.getRow(parseIn).getCell(desInex).getStringCellValue();
-					String[] arrStep = step.split("\n");
-					String error = "";
-					String verifyCode = "";
-					boolean breakResult = false;
-					String[] token = null;
-					for (String x : arrStep) {
-						String[] keyWordStep = x.split(":");
-						String keyWord1 = keyWordStep[0].substring(keyWordStep[0].lastIndexOf(".") + 1, keyWordStep[0].length()).trim();
-						System.out.println("keyWord" + ":" + keyWord1);
-						if (error.length() > 0) {
-							cutomesInputExxcel(parseIn, resultInex1, error);
-							fos = new FileOutputStream(strFileName);
-							System.out.println(fos);
-							workbook.write(fos);
-							fos.flush();
-							fos.close();
-							error = "";
-							breakResult = true;
-							break;
-						} else {
-							switch (keyWord1) {
-
-							case "Go to URL":
-								token = keyWordStep[1].split("\"");
-								String url = keyWordStep[1] + ":" + keyWordStep[2];
-								String url1 = url.replaceAll("\"", "");
-								String url2 = url1.replaceAll("with value", "");
-								try {
-									driver.get(url2);
-									Thread.sleep(2000);
-								} catch (Exception e) {
-									error = "Pending: wrong" + url2;
-								}
-								break;
-							case "Navigate to URL":
-								token = keyWordStep[1].split("\"");
-								String urls = keyWordStep[1] + ":" + keyWordStep[2];
-								String urls1 = urls.replaceAll("\"", "");
-								String urls2 = urls1.replaceAll("with value", "");
-								try {
-									driver.navigate().to(urls2);
-									Thread.sleep(2000);
-								} catch (Exception e) {
-									error = "Pending: wrong" + urls2;
-								}
-								break;
-							case "Click on":
-								String[] arr = keyWordStep[1].split("\"");
-								String elementKey = arr[1];
-								System.out.println("Element key + " + elementKey);
-								try {
-									driver.findElement(getIdentifier(elementKey)).click();
-								} catch (Exception e) {
-									error = "Pending: wrong" + elementKey + "element";
-								}
-								Thread.sleep(1000);
-								break;
-							case "Find on":
-								String[] arrFind = keyWordStep[1].split("\"");
-								String elementFind = arrFind[1];
-								System.out.println("Element key + " + elementFind);
-								String expected = arrFind[3];
-								try {
-									List<WebElement> e = driver.findElements(getIdentifier(elementFind));
-									for (WebElement webElement : e) {
-										String acutalResult = webElement.getText();
-										System.out.println("acutalResult" + acutalResult);
-										if (acutalResult.equals(expected)) {
-											webElement.click();
-											break;
-										}else{
-											System.out.println("Cannot find element");
-										}
-									}
-								} catch (Exception e) {
-									error = "Pending: wrong" + elementFind + "element";
-								}
-								Thread.sleep(1000);
-								break;
-								
-							case "Input into":
-								String[] arr1 = keyWordStep[1].split("\"");
-								if (arr1[1].equalsIgnoreCase("Verification Code fields")) {
-									WebElement input = driver
-											.findElement(By.xpath(".//div[@class='form-text']/div/input"));
-									input.click();
-									for (char ch : arr1[3].toCharArray()) {
-										String codeInput = Character.toString(ch);
-										Actions act = new Actions(driver);
-										act.sendKeys(codeInput).build().perform();
-										Thread.sleep(2000);
-									}
-								} else {
-									String elementPlace = arr1[1];
-									try {
-										driver.findElement(getIdentifier(elementPlace)).click();
-										String elementInput = arr1[3];
-										if (elementInput.equals("blank")) {
-											driver.findElement(getIdentifier(elementPlace)).clear();
-											driver.findElement(getIdentifier(elementPlace)).sendKeys("");
-										} else {
-											waitForWebState();
-											driver.findElement(getIdentifier(elementPlace)).clear();
-											driver.findElement(getIdentifier(elementPlace)).sendKeys(arr1[3]);
-
-										}
-									} catch (Exception e) {
-										error = "Pending: wrong" + elementPlace + "element";
-									}
-								}
-								break;
-							case "Scroll down":
-								JavascriptExecutor jsdown = (JavascriptExecutor) driver;
-								jsdown.executeScript("window.scrollTo(0, document.body.scrollHeight)");
-								break;
-							case "Scroll top":
-								JavascriptExecutor jstop = (JavascriptExecutor) driver;
-								jstop.executeScript("window.scrollTo(document.body.scrollHeight, 0)");
-								break;
-							case "Input into name":
-								String[] arrlogin = keyWordStep[1].split("\"");
-								if (arrlogin[1].equalsIgnoreCase("Verification Code fields")) {
-									WebElement input = driver
-											.findElement(By.xpath(".//div[@class='form-text']/div/input"));
-									input.click();
-									for (char ch : arrlogin[3].toCharArray()) {
-										String codeInput = Character.toString(ch);
-										Actions act = new Actions(driver);
-										act.sendKeys(codeInput).build().perform();
-										Thread.sleep(2000);
-									}
-								} else {
-									String elementPlace = arrlogin[1];
-									try {
-										driver.findElement(getIdentifier(elementPlace)).click();
-										String elementInput = arrlogin[3];
-										if (elementInput.equals("blank")) {
-											driver.findElement(getIdentifier(elementPlace)).clear();
-											driver.findElement(getIdentifier(elementPlace)).sendKeys("");
-										} else {
-											driver.findElement(getIdentifier(elementPlace)).clear();
-											driver.findElement(getIdentifier(elementPlace)).sendKeys(getRandomString(3, 5) + arrlogin[3]);
-
-										}
-									} catch (Exception e) {
-										error = "Pending: wrong" + elementPlace + "element";
-									}
-								}
-								break;
-							case "Upload image":
-								String[] arrImage = keyWordStep[1].split("\"");
-								String elementPlace = arrImage[1];
-								try {
-									driver.findElement(getIdentifier(elementPlace)).click();
-									String elementInput = arrImage[3];
-									uploadImage(elementInput);
-								} catch (Exception e) {
-									error = "Pending: wrong" + elementPlace + "element";
-								}
-								break;
-							case "Wait":
-								String[] arr2 = keyWordStep[1].split("\"");
-								String elementTime = arr2[1] + "000";
-								int result = Integer.parseInt(elementTime);
-								try {
-									Thread.sleep(result);
-								} catch (Exception e) {
-									error = "Pending: wrong" + result + "element";
-								}
-								break;
-
-							case "Get response code":
-								String[] arr3 = keyWordStep[1].split("\"");
-								try {
-									String urlAPI = "https://a0cw2kn9cc.execute-api.ap-southeast-1.amazonaws.com/dev/postpaid/v1/account/verification-code";
-									String body = "{\"msisdn\":\"" + arr3[1] + "\"}";
-									System.err.println(body);
-									Response resp = given().header("g1es_token", "myacc-qcauto11@gmail.com").body(body)
-											.when().post(urlAPI);
-									Thread.sleep(5000);
-									String responString = resp.asString();
-									System.out.println(responString);
-									String code = responString.replaceAll(" ", "").replaceAll("\\{", "")
-											.replaceAll("\\}", "").replaceAll("\"", "");
-									verifyCode = code.substring(code.lastIndexOf(":") + 1, code.length());
-									System.out.println(verifyCode);
-								} catch (Exception e) {
-									error = "Pending: issue with response";
-								}
-								break;
-							case "Run API":
-								String[] arr4 = keyWordStep[1].split("\"");
-								try {
-									WebElement input = driver
-											.findElement(By.xpath(".//div[@class='form-text']/div/input"));
-									input.click();
-									for (char ch : verifyCode.toCharArray()) {
-										String codeInput = Character.toString(ch);
-										Actions act = new Actions(driver);
-										act.sendKeys(codeInput).build().perform();
-										Thread.sleep(500);
-									}
-								} catch (Exception e) {
-									error = "Pending: wrong input element";
-								}
-
-								break;
-							case "Wait for":
-								driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
-								String[] arr6 = keyWordStep[1].split("\"");
-								waitForWebState();
-								System.out.println(arr6[1]);
-								try {
-									List<WebElement> a = driver.findElements(getIdentifier(arr6[1]));
-
-								} catch (Exception e) {
-									cutomesInputExxcel(parseIn, resultInex1, "Pending: wrong" + arr6[1] + "element");
-								}
-								break;
-							case "Set checkbox":
-								String[] arr7 = keyWordStep[1].split("\"");
-								String elementcb = arr7[1];
-								try {
-									driver.findElement(getIdentifier(elementcb)).click();
-								} catch (Exception e) {
-									error = "Pending: wrong" + elementcb + "element";
-
-								}
-								break;
-							case "Set uncheckbox":
-								String[] arr8 = keyWordStep[1].split("\"");
-								String elementUncheck = arr8[1];
-								try {
-									driver.findElement(getIdentifier(elementUncheck)).click();
-								} catch (Exception e) {
-									error = "Pending: wrong" + elementUncheck + "element";
-
-								}
-								break;
-							case "Select value":
-								String[] arr9 = keyWordStep[1].split("\"");
-								String elementDropdown = arr9[1];
-								try {
-									WebElement dropDown = driver.findElement(getIdentifier(elementDropdown));
-									Select select = new Select(dropDown);
-									String slecTextVisible = arr9[3];
-									select.selectByVisibleText(slecTextVisible);
-								} catch (Exception e) {
-									error = "Pending: wrong" + elementDropdown + "element";
-								}
-								break;
-
-							default:
-								System.out.println("Done");
-
-							}
-						}
-					}
-					if (!breakResult) {
-						String result = sheet.getRow(parseIn).getCell(expetedInex).getStringCellValue();
-						String[] arrResult = result.split("\n");
-						for (String y : arrResult) {
-							System.out.println(y);
-							String[] keyWordResult = y.split(":");
-							System.out.println(keyWordResult[0]);
-							String keyWord2 = keyWordResult[0]
-									.substring(keyWordResult[0].lastIndexOf(".") + 1, keyWordResult[0].length()).trim();
-							System.out.println("keyWord" + ":" + keyWord2);
-							switch (keyWord2) {
-
-							case "Navigate to":
-								driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
-								String[] arr = keyWordResult[1].split("\"");
-								String expectedURL = arr[1];
-
-								// String expectedURL =
-								// ReadProperties.getElementsAndUrls(elementKey);
-								waitForWebState();
-								String actualUrl = driver.getTitle();
-								System.out.println(expectedURL);
-								System.out.println("String exoectecd: " + actualUrl);
-								if (expectedURL.contains(actualUrl)) {
-									cutomesInputExxcel(parseIn, resultInex1, "passed");
-									System.out.println("pass");
-								} else {
-									cutomesInputExxcel(parseIn, resultInex1, "failed");
-									System.out.println("failed");
-								}
-								break;
-							case "Get text":
-								String[] arrText = keyWordResult[1].split("\"");
-								waitForWebState();
-								String elementKeyText = arrText[1];
-								String expecedResult = arrText[3];
-								System.out.println("Element key + " + elementKeyText);
-								System.out.println("expecedResult key + " + expecedResult);
-								
-								try {
-									List<WebElement> elementList = driver.findElements((By) getElementsList(elementKeyText));
-									System.out.println("dsjkadnbsjkandkans" +  elementList);
-									for (WebElement webElement : elementList) {
-										String textActual = webElement.getText();
-										System.out.println("Text frome table" + textActual);
-									
-										if (textActual.contains(expecedResult)) {
-											cutomesInputExxcel(parseIn, resultInex1, "passed");
-											System.out.println("passed");
-										} else {
-											cutomesInputExxcel(parseIn, resultInex1, "failed");
-											System.out.println("failed");
-										}
-										break;
-									}
-								} catch (Exception e) {
-									error = "Pending: wrong" + elementKeyText + "element";
-								}
-								Thread.sleep(1000);
-								break;
-							case "Should see text":
-								driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
-								String[] arr1 = keyWordResult[1].split("\"");
-								waitForWebState();
-								String elementKey1 = arr1[3];
-								String text = arr1[1];
-								try {
-									String text1 = driver.findElement(getIdentifier(elementKey1)).getText();
-									System.out.println(text);
-									System.out.println(text1);
-									if (text1.contains(text)) {
-										cutomesInputExxcel(parseIn, resultInex1, "passed");
-										System.out.println("pass");
-									} else {
-										cutomesInputExxcel(parseIn, resultInex1, "failed");										
-										System.out.println("failed");
-									}
-								} catch (Exception e) {
-									cutomesInputExxcel(parseIn, resultInex1, "pending");										
-
-								}
-
-								break;
-							case "Should see result":
-								driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
-								String[] arr2 = keyWordResult[1].split("\"");
-								waitForWebState();
-								System.out.println("Text expected" + arr2[3]);
-								String expectedResult = arr2[3];
-								System.out.println(arr2[1]);
-								try {
-									
-//									 WebElement table = driver.findElement(By.className("messageTable"));
-//									    List<WebElement> rows = table.findElements(By.tagName("li"));
-//									        for(WebElement element:rows ){
-//									            System.out.println(element.getText());
-//									    	}
-									List<WebElement> e = driver.findElements(getIdentifier(arr2[1]));
-									for (WebElement webElement : e) {
-										String acutalResult = webElement.getText();
-										System.out.println("acutalResult" + acutalResult);
-										
-										if (acutalResult.contains(expectedResult)) {
-											cutomesInputExxcel(parseIn, resultInex1, "passed");
-											System.out.println("PASSED");
-											break;
-										}else{
-											cutomesInputExxcel(parseIn, resultInex1, "failed");
-											System.out.println("failed");
-										}
-									}
-								} catch (Exception e) {
-									sheet.getRow(parseIn).getCell(resultInex1).setCellValue("pending");
-								}
-								break;
-							case "Disabled":
-								driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
-								String[] arr3 = keyWordResult[1].split("\"");
-								waitForWebState();
-								System.out.println(arr3[1]);
-								try {
-									List<WebElement> b = driver.findElements(getIdentifier(arr3[1]));
-									if (b.size() == 0) {
-										sheet.getRow(parseIn).getCell(resultInex1).setCellValue("passed");
-										System.out.println("pased");
-									} else {
-										sheet.getRow(parseIn).getCell(resultInex1).setCellValue("failed");
-										System.out.println("failed");
-									}
-								} catch (Exception e) {
-									sheet.getRow(parseIn).getCell(resultInex1).setCellValue("peding");
-								}
-								break;
-
-							default:
-								System.out.println("Done");
-							}
-
-						}
-						fos = new FileOutputStream(strFileName);
-						workbook.write(fos);
-						fos.flush();
-						fos.close();
-					} else {
-						breakResult = false;
-					}
-
+			if (rowDo.contains(",")) { // Case 2: Run some row on Excel file
+				String[] arrRowDo = rowDo.split(",");
+				for (int i = 0; i < arrRowDo.length; i++) {
+					int row = Integer.parseInt(arrRowDo[i]);
+					stepByStep(strFileName, workbook, sheet, row, desInex, expetedInex, resultInex);
 				}
-			} else {
-				System.out.println("Chuỗi ko có ký tự đặc biệt" + s);
-				int onlyRow = Integer.parseInt(s);
-				String title = sheet.getRow(onlyRow).getCell(1).getStringCellValue();
-				// System.out.println(a);
-				String step = sheet.getRow(onlyRow).getCell(desInex).getStringCellValue();
-				// System.out.println(b);
-				System.out.println(step);
-				String[] arrStep = step.split("\n");
+			} else { // Case 3: Run a row on Excel file
+				int row = Integer.parseInt(rowDo.trim());
+				stepByStep(strFileName, workbook, sheet, row, desInex, expetedInex, resultInex);
+			}
+		}
+	}
 
-				String error = "";
-				String verifyCode = "";
-				boolean breakResult = false;
-				String[] token = null;
-				for (String x : arrStep) {
-					String[] keyWordStep = x.split(":");
+	/**
+	 * Run Step by step of a case on List Test Case in Excel file
+	 * 
+	 * @param strFileName
+	 * @param workbook
+	 * @param sheet
+	 * @param row
+	 * @param desInex
+	 * @param expetedInex
+	 * @param resultInex
+	 * @throws Exception
+	 */
+	private void stepByStep(String strFileName, XSSFWorkbook workbook, XSSFSheet sheet, int row, int desInex,
+			int expetedInex, int resultInex) throws Exception {
+		String step = "";
+		boolean toDo = true;
+		try {
+			step = sheet.getRow(row).getCell(desInex).getStringCellValue();
+		} catch (NullPointerException e) {
+			toDo = false;
+		}
+		if (toDo) {
+			String[] arrStep = step.split("\n");
+			String error = "";
+			boolean breakResult = false;
+			for (String stepCurrent : arrStep) {
+				Thread.sleep(500);
+				System.err.println(stepCurrent);
+				String[] keyWordStep = stepCurrent.split(":");
+				String keyWord1 = keyWordStep[0].substring(keyWordStep[0].lastIndexOf(".") + 1, keyWordStep[0].length())
+						.trim();
+				if (error.length() > 0) {
+					sheet.getRow(row).createCell(resultInex).setCellValue(error);
+					FileOutputStream fileOut = new FileOutputStream(strFileName);
+					workbook.write(fileOut);
+					fileOut.flush();
+					fileOut.close();
+					error = "";
+					breakResult = true;
+					break;
+				} else {
+					String[] arrBreak = null;
+					switch (keyWord1) {
 
-					String keyWord1 = keyWordStep[0]
-							.substring(keyWordStep[0].lastIndexOf(".") + 1, keyWordStep[0].length()).trim();
-
-					System.out.println("keyWord" + ":" + keyWord1);
-					if (error.length() > 0) {
-						cutomesInputExxcel(onlyRow, resultInex1, error);
-						//sheet.getRow(onlyRow).getCell(resultInex1).setCellValue(error);
-						fos = new FileOutputStream(strFileName);
-						System.out.println(fos);
-						workbook.write(fos);
-						fos.flush();
-						fos.close();
-						error = "";
-						breakResult = true;
+					case "Go to URL":
+						String url = stepCurrent.substring(stepCurrent.indexOf("http"), stepCurrent.length() - 1);
+						try {
+							driver.get(url);
+							Thread.sleep(2000);
+						} catch (Exception e) {
+							error = "Pending: wrong " + url;
+						}
 						break;
-					} else {
-						switch (keyWord1) {
 
-						case "Go to URL":
-							token = keyWordStep[1].split("\"");
-							String url = keyWordStep[1] + ":" + keyWordStep[2];
-							String url1 = url.replaceAll("\"", "");
-							String url2 = url1.replaceAll("with value", "");
-							try {
-								driver.get(url2);
-								Thread.sleep(2000);
-							} catch (Exception e) {
-								error = "Pending: wrong" + url2;
-							}
-							break;
-
-						case "Click on":
-							String[] arr = keyWordStep[1].split("\"");
-							String elementKey = arr[1];
-							try {
-								driver.findElement(getIdentifier(elementKey)).click();
-							} catch (Exception e) {
-								error = "Pending: wrong" + elementKey + "element";
-							}
-							Thread.sleep(1000);
-							break;
-						case "Input into":
-							String[] arr1 = keyWordStep[1].split("\"");
-							if (arr1[1].equalsIgnoreCase("Verification Code fields")) {
-								WebElement input = driver.findElement(By.xpath(".//div[@class='form-text']/div/input"));
-								input.click();
-								for (char ch : arr1[3].toCharArray()) {
-									String codeInput = Character.toString(ch);
-									Actions act = new Actions(driver);
-									act.sendKeys(codeInput).build().perform();
-									Thread.sleep(2000);
+					case "Click on":
+						arrBreak = keyWordStep[1].split("\"");
+						String elementKey = arrBreak[1];
+						try {
+							driver.findElement(getIdentifier(elementKey)).click();
+						} catch (Exception e) {
+							error = "Pending: wrong " + elementKey + " element";
+						}
+						Thread.sleep(1000);
+						break;
+					case "Find on":
+						String[] arrFind = keyWordStep[1].split("\"");
+						String elementFind = arrFind[1];
+						String expected = arrFind[3];
+						boolean check = false;
+						try {
+							List<WebElement> lst = driver.findElements(getIdentifier(elementFind));
+							for (WebElement webElement : lst) {
+								String acutalResult = webElement.getText();
+								if (acutalResult.equals(expected)) {
+									webElement.click();
+									check = true;
+									break;
 								}
+							}
+							if (!check) {
+								error = "Can not find element " + expected + " on list element " + elementFind;
+							}
+						} catch (Exception e) {
+							error = "Pending: wrong " + elementFind + " element";
+						}
+						Thread.sleep(1000);
+						break;
+					case "Input into":
+						arrBreak = keyWordStep[1].split("\"");
+
+						String elementPlace = arrBreak[1];
+
+						try {
+							driver.findElement(getIdentifier(elementPlace)).click();
+							String elementInput = arrBreak[3];
+							if (elementInput.equals("blank")) {
+								driver.findElement(getIdentifier(elementPlace)).clear();
+								driver.findElement(getIdentifier(elementPlace)).sendKeys("");
 							} else {
-								String elementPlace = arr1[1];
-								try {
-									driver.findElement(getIdentifier(elementPlace)).click();
-									String elementInput = arr1[3];
-									if (elementInput.equals("blank")) {
-										driver.findElement(getIdentifier(elementPlace)).clear();
-										driver.findElement(getIdentifier(elementPlace)).sendKeys("");
-									} else {
-										driver.findElement(getIdentifier(elementPlace)).clear();
-										driver.findElement(getIdentifier(elementPlace)).sendKeys(arr1[3]);
-
-									}
-								} catch (Exception e) {
-									error = "Pending: wrong" + elementPlace + "element";
-								}
+								driver.findElement(getIdentifier(elementPlace)).clear();
+								driver.findElement(getIdentifier(elementPlace)).sendKeys(arrBreak[3]);
 							}
-							break;
-						case "Wait":
-							String[] arr2 = keyWordStep[1].split("\"");
-							String elementTime = arr2[1] + "000";
+						} catch (Exception e) {
+							error = "Pending: wrong " + elementPlace + " element";
+						}
+
+						break;
+					case "Wait":
+						if (keyWordStep[1].contains("wait for page load successful")) {
+							waitForAjax();
+							waitForWebState();
+						} else {
+							arrBreak = keyWordStep[1].split("\"");
+							String elementTime = arrBreak[1] + "000";
 							int result = Integer.parseInt(elementTime);
 							try {
 								Thread.sleep(result);
 							} catch (Exception e) {
-								error = "Pending: wrong" + result + "element";
+								error = "Pending: wrong " + result + " element";
 							}
-							break;
-
-						case "Get response code":
-							String[] arr3 = keyWordStep[1].split("\"");
-							try {
-								String urlAPI = "https://a0cw2kn9cc.execute-api.ap-southeast-1.amazonaws.com/dev/postpaid/v1/account/verification-code";
-								String body = "{\"msisdn\":\"" + arr3[1] + "\"}";
-								System.err.println(body);
-								Response resp = given().header("g1es_token", "myacc-qcauto11@gmail.com").body(body)
-										.when().post(urlAPI);
-								Thread.sleep(5000);
-								String responString = resp.asString();
-								System.out.println(responString);
-								String code = responString.replaceAll(" ", "").replaceAll("\\{", "")
-										.replaceAll("\\}", "").replaceAll("\"", "");
-								verifyCode = code.substring(code.lastIndexOf(":") + 1, code.length());
-								System.out.println(verifyCode);
-							} catch (Exception e) {
-								error = "Pending: issue with response";
-							}
-							break;
-						case "Run API":
-							String[] arr4 = keyWordStep[1].split("\"");
-							try {
-								WebElement input = driver.findElement(By.xpath(".//div[@class='form-text']/div/input"));
-								input.click();
-								for (char ch : verifyCode.toCharArray()) {
-									String codeInput = Character.toString(ch);
-									Actions act = new Actions(driver);
-									act.sendKeys(codeInput).build().perform();
-									Thread.sleep(500);
-								}
-							} catch (Exception e) {
-								error = "Pending: wrong input element";
-							}
-
-							break;
-						case "Wait for":
-							driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
-							String[] arr6 = keyWordStep[1].split("\"");
-							waitForWebState();
-							System.out.println(arr6[1]);
-							try {
-								List<WebElement> a = driver.findElements(getIdentifier(arr6[1]));
-
-							} catch (Exception e) {
-								sheet.getRow(onlyRow).getCell(resultInex1)
-										.setCellValue("Pending: wrong" + arr6[1] + "element");
-							}
-							break;
-						case "Set checkbox":
-							String[] arr7 = keyWordStep[1].split("\"");
-							String elementcb = arr7[1];
-							try {
-								driver.findElement(getIdentifier(elementcb)).click();
-							} catch (Exception e) {
-								error = "Pending: wrong" + elementcb + "element";
-
-							}
-							break;
-						case "Set uncheckbox":
-							String[] arr8 = keyWordStep[1].split("\"");
-							String elementUncheck = arr8[1];
-							try {
-								driver.findElement(getIdentifier(elementUncheck)).click();
-							} catch (Exception e) {
-								error = "Pending: wrong" + elementUncheck + "element";
-
-							}
-							break;
-						case "Select value":
-							String[] arr9 = keyWordStep[1].split("\"");
-							String elementDropdown = arr9[1];
-							try {
-								WebElement dropDown = driver.findElement(getIdentifier(elementDropdown));
-								Select select = new Select(dropDown);
-								String slecTextVisible = arr9[3];
-								select.selectByVisibleText(slecTextVisible);
-							} catch (Exception e) {
-								error = "Pending: wrong" + elementDropdown + "element";
-							}
-							break;
-
-						default:
-							System.out.println("Done");
 
 						}
+						break;
+					case "Select value":
+						arrBreak = keyWordStep[1].split("\"");
+						String elementvalue = arrBreak[1];
+						try {
+							driver.findElement(getIdentifier(elementvalue)).click();
+						} catch (Exception e) {
+							error = "Pending: wrong " + elementvalue + " element";
+
+						}
+						break;
+					case "Wait for":
+						driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+						arrBreak = keyWordStep[1].split("\"");
+						waitForWebState();
+						System.out.println(arrBreak[1]);
+						try {
+							List<WebElement> a = driver.findElements(getIdentifier(arrBreak[1]));
+
+						} catch (Exception e) {
+							sheet.getRow(row).getCell(resultInex)
+									.setCellValue("Pending: wrong " + arrBreak[1] + " element");
+						}
+						break;
+
+					case "Set checkbox":
+						arrBreak = keyWordStep[1].split("\"");
+						String elementcb = arrBreak[1];
+						try {
+							driver.findElement(getIdentifier(elementcb)).click();
+						} catch (Exception e) {
+							error = "Pending: wrong " + elementcb + " element";
+
+						}
+						break;
+					case "Set uncheckbox":
+						arrBreak = keyWordStep[1].split("\"");
+						String elementUncheck = arrBreak[1];
+						try {
+							driver.findElement(getIdentifier(elementUncheck)).click();
+						} catch (Exception e) {
+							error = "Pending: wrong " + elementUncheck + " element";
+
+						}
+						break;
+					case "Select select box":
+						try {
+							arrBreak = keyWordStep[1].split("\"");
+							String elementSLB = arrBreak[1];
+							String valueSLB = arrBreak[3];
+							driver.findElement(getIdentifier(elementSLB)).click();
+							List<WebElement> lst = driver.findElements(By.xpath(".//input[@type='search']"));
+							WebElement ele = lst.get(lst.size() - 1);
+							ele.sendKeys(valueSLB);
+							ele.sendKeys(Keys.ENTER);
+						} catch (Exception e) {
+							error = "Select Box " + arrBreak[1] + " do not work";
+						}
+						break;
+					case "Upload image":
+						String[] arrImage = keyWordStep[1].split("\"");
+						String elementUpload = arrImage[1];
+						String elementInput = arrImage[3];
+						try {
+							driver.findElement(getIdentifier(elementUpload)).click();
+							uploadImage(elementInput);
+						} catch (Exception e) {
+							error = "Pending: wrong" + elementUpload + "element";
+						}
+						break;
+					case "Choice text box":
+						try {
+							arrBreak = keyWordStep[1].split("\"");
+							String elementTB = arrBreak[1];
+							String value = arrBreak[3];
+							driver.findElement(getIdentifier(elementTB)).click();
+							WebElement ele = driver.findElement(getIdentifier(elementTB));
+							ele.sendKeys(value);
+							ele.sendKeys(Keys.ENTER);
+
+						} catch (Exception e) {
+							error = "Text Box " + arrBreak[1] + " do not work";
+						}
+						break;
+					default:
+						error = "Step " + stepCurrent + " has not been defined";
+						break;
+
 					}
 				}
-				if (!breakResult) {
-					String result = sheet.getRow(onlyRow).getCell(expetedInex).getStringCellValue();
+			}
+			if (!breakResult) {
+				boolean isResultNull = true;
+				try {
+					String result = sheet.getRow(row).getCell(expetedInex).getStringCellValue();
+					if (result.length() == 0) {
+						isResultNull = true;
+					} else {
+						isResultNull = false;
+					}
+				} catch (NullPointerException e) {
+					isResultNull = true;
+				}
+				if (isResultNull == false) {
+					isResultNull = true;
+					String status = "";
+					String result = sheet.getRow(row).getCell(expetedInex).getStringCellValue();
 					String[] arrResult = result.split("\n");
 					for (String y : arrResult) {
 						System.out.println(y);
@@ -5141,142 +5003,76 @@ public class OperationHelper extends ParentStepsSupport {
 								.substring(keyWordResult[0].lastIndexOf(".") + 1, keyWordResult[0].length()).trim();
 						System.out.println("keyWord" + ":" + keyWord2);
 						switch (keyWord2) {
-
-						case "Navigate to":
-							driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
-							String[] arr = keyWordResult[1].split("\"");
-							String expectedURL = arr[1];
-							waitForWebState();
-							String actualUrl = driver.getTitle();
-							System.out.println(expectedURL);
-							System.out.println(actualUrl);
-							if (expectedURL.contains(actualUrl)) {
-								sheet.getRow(onlyRow).getCell(resultInex1).setCellValue("passed");
-								System.out.println("pass");
-							} else {
-								sheet.getRow(onlyRow).getCell(resultInex1).setCellValue("failed");
-								System.out.println("failed");
-
-							}
-							break;
-						case "Should see text":
-							driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
-							String[] arr1 = keyWordResult[1].split("\"");
-							waitForWebState();
-							String elementKey1 = arr1[3];
-							String text = arr1[1];
-							try {
-								String text1 = driver.findElement(getIdentifier(elementKey1)).getText();
-								System.out.println(text);
-								System.out.println(text1);
-								if (text1.contains(text)) {
-									sheet.getRow(onlyRow).getCell(resultInex1).setCellValue("passed");
-									System.out.println("pass");
-								} else {
-									sheet.getRow(onlyRow).getCell(resultInex1).setCellValue("failed");
-									System.out.println("failed");
-								}
-							} catch (Exception e) {
-								sheet.getRow(onlyRow).getCell(resultInex1).setCellValue("pending");
-							}
-
-							break;
 						case "Should see result":
-							driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
-							String[] arr2 = keyWordResult[1].split("\"");
 							waitForWebState();
-							System.out.println(arr2[1]);
+							String[] arrLstResult = keyWordResult[1].split("\"");
 							try {
-								List<WebElement> e = driver.findElements(getIdentifier(arr2[1]));
-								if (e.size() > 0) {
-									sheet.getRow(onlyRow).getCell(resultInex1).setCellValue("passed");
-									System.out.println("pased");
-								} else {
-									sheet.getRow(onlyRow).getCell(resultInex1).setCellValue("failed");
-									System.out.println("failed");
+								List<WebElement> lst = driver.findElements(getIdentifier(arrLstResult[3]));
+								boolean check = false;
+								for (WebElement e : lst) {
+									String value = e.getText();
+									if (value.equals(arrLstResult[1])) {
+										status = "PASSED";
+										check = true;
+										break;
+									}
 								}
-							} catch (Exception e) {
-								sheet.getRow(onlyRow).getCell(resultInex1).setCellValue("pending");
-							}
-							break;
+								if (!check) {
+									status = "FAILED";
+								}
 
-						case "Disabled":
-							driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
-							String[] arr3 = keyWordResult[1].split("\"");
-							waitForWebState();
-							System.out.println(arr3[1]);
-							try {
-								List<WebElement> b = driver.findElements(getIdentifier(arr3[1]));
-								if (b.size() == 0) {
-									sheet.getRow(onlyRow).getCell(resultInex1).setCellValue("passed");
-									System.out.println("pased");
-								} else {
-									sheet.getRow(onlyRow).getCell(resultInex1).setCellValue("failed");
-									System.out.println("failed");
-								}
 							} catch (Exception e) {
-								sheet.getRow(onlyRow).getCell(resultInex1).setCellValue("peding");
+								status = "PENDING";
 							}
 							break;
 
 						default:
-							System.out.println("Done");
+							break;
 						}
 
 					}
-					fos = new FileOutputStream(strFileName);
-
-					System.out.println(fos);
-					workbook.write(fos);
-					fos.flush();
-					fos.close();
+					XSSFCell cell = null;
+					cell = sheet.getRow(row).createCell(resultInex);
+					setColorCell(status, workbook, cell);
+					cell.setCellValue(status);
+					FileOutputStream fileout = new FileOutputStream(strFileName);
+					workbook.write(fileout);
+					fileout.flush();
+					fileout.close();
 				} else {
-					breakResult = false;
+					XSSFCell cell = null;
+					cell = sheet.getRow(row).createCell(resultInex);
+					setColorCell("NONE", workbook, cell);
+					cell.setCellValue("NONE");
+					FileOutputStream fileout = new FileOutputStream(strFileName);
+					workbook.write(fileout);
+					fileout.flush();
+					fileout.close();
 				}
+			} else {
+				breakResult = false;
 			}
 		}
 	}
 
-	public static String getRandomString(int loai, int dodai) {
-		String ketqua = "";
-		String hoa = "QWERTYUIOPASDFGHJKLZXCVBNM";
-		String thuong = hoa.toLowerCase();
-		String so = "1234567890";
-		String randomchuoi = "";
-		if (loai > 3 || loai < 0) {
-			ketqua = "Loai khong hop le, cho phep tu 0 - 3";
-		} else if (loai == 0) {
-			randomchuoi = thuong;
-		} else if (loai == 1) {
-			randomchuoi = hoa;
-		} else if (loai == 2) {
-			randomchuoi = hoa + thuong;
-		} else if (loai == 3) {
-			randomchuoi = hoa + thuong + so;
-		}
-		for (int i = 0; i < dodai; i++) {
-			int temp = (int) Math.round(Math.random() * randomchuoi.length());
-			ketqua += randomchuoi.charAt(temp);
-		}
-		return ketqua;
-	}
 	public static void uploadImage(String imageName) throws AWTException {
-		Robot robot = new Robot();
-		String pathFileName = "C:\\Users\\vuong.dd\\Downloads\\" + imageName;
-		StringSelection stringselection = new StringSelection(pathFileName);
-		Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringselection, null);
-		robot.setAutoDelay(1000);
-		robot.keyPress(KeyEvent.VK_CONTROL);
-		robot.keyPress(KeyEvent.VK_V);
-		robot.keyRelease(KeyEvent.VK_CONTROL);
-		robot.keyRelease(KeyEvent.VK_V);
-		robot.setAutoDelay(1000);
-		robot.keyPress(KeyEvent.VK_ENTER);
-		robot.keyRelease(KeyEvent.VK_ENTER);
-	}
-	public static void cutomesInputExxcel(int row, int col, String value) {
-		XSSFCell cell = null;
-		cell = sheet.getRow(row).createCell(col);
-		cell.setCellValue(value);
+		try {
+			Robot robot = new Robot();
+			String pathFileName = "C:\\Users\\vuong.dd\\Downloads\\" + imageName;
+			StringSelection stringselection = new StringSelection(pathFileName);
+			Toolkit.getDefaultToolkit().getSystemClipboard().setContents(stringselection, null);
+			robot.setAutoDelay(1000);
+			robot.keyPress(KeyEvent.VK_CONTROL);
+			robot.keyPress(KeyEvent.VK_V);
+			robot.keyRelease(KeyEvent.VK_CONTROL);
+			robot.keyRelease(KeyEvent.VK_V);
+			robot.setAutoDelay(1000);
+			robot.keyPress(KeyEvent.VK_ENTER);
+			robot.keyRelease(KeyEvent.VK_ENTER);
+			robot.keyPress(KeyEvent.VK_CANCEL);
+			robot.keyRelease(KeyEvent.VK_CANCEL);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 	}
 }
